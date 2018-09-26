@@ -24,31 +24,25 @@ filterCheckbox.addEventListener('change', (event) => {
 } );
 
 function createGuest(name) {
+  function createElement(type, property, value) {
+    const element = document.createElement(type);
+    element[property] = value;
+    return element;
+  }
+
+  function appendElementToGuest(type, property, value) {
+    const element = createElement(type, property, value);
+    guest.appendChild(element);
+    return element;
+  }
+
   const guest = document.createElement('li');
-
-  // Set guest name
-  const span = document.createElement('span');
-  span.textContent = input.value;
-  guest.appendChild(span)
-
-  // Create Confirmed checkbox
-  const label = document.createElement('label');
-  label.textContent = 'confirmed';
-  const box = document.createElement('input');
-  box.type = 'checkbox';
-  label.appendChild(box);
-  guest.appendChild(label);
-
-  // Create Edit button
-  const editButton = document.createElement('button');
-  editButton.textContent = 'edit';
-  guest.appendChild(editButton);
-
-  // Create Remove button
-  const removeButton = document.createElement('button');
-  removeButton.textContent = 'remove';
-  guest.appendChild(removeButton);
-
+  appendElementToGuest('span', 'textContent', input.value);
+  // create checkbox enclosed in a label element
+  appendElementToGuest('label', 'textContent', 'confirmed')
+    .appendChild(createElement('input', 'type', 'checkbox'));
+  appendElementToGuest('button', 'textContent', 'edit');
+  appendElementToGuest('button', 'textContent', 'remove');
   return guest;
 }
 
