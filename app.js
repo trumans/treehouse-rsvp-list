@@ -72,31 +72,36 @@ inviteList.addEventListener('click', (event) => {
       const btn = event.target;
       const guest = btn.parentElement;
 
-      if ( btn.textContent === 'remove' ) {
-        inviteList.removeChild(guest);
+      const buttonActions = {
+        'remove': function() {
+          inviteList.removeChild(guest);
+        },
+        'edit': function() {
+          const span = guest.querySelector('span');
+          // create the edit field
+          const edit = document.createElement('input');
+          edit.type = 'text';
+          edit.value = span.textContent;
+          // replace the text field with the edit field.
+          guest.insertBefore(edit, span);
+          guest.removeChild(span);
+          // replace text on edit button
+          btn.textContent = 'SAVE';
+        },
+        'SAVE': function() {
+          const edit = guest.querySelector('input[type="text"]');
+          // recreate the span field
+          const span = document.createElement('span')
+          span.textContent = edit.value;
+          // replace the edit field with the span.
+          guest.insertBefore(span, edit);
+          guest.removeChild(edit);
+          // restore text on edit button
+          btn.textContent = 'edit';
+        }
       }
-      else if ( btn.textContent === 'edit' ) {
-        const span = guest.querySelector('span');
-        // create the edit field
-        const edit = document.createElement('input')
-        edit.type = 'text';
-        edit.value = span.textContent;
-        // replace the text field with the edit field.
-        guest.insertBefore(edit, span);
-        guest.removeChild(span);
-        // replace text on edit button
-        btn.textContent = 'SAVE';
-      }
-      else if ( btn.textContent === 'SAVE' ) {
-        const edit = guest.querySelector('input[type="text"]');
-        // recreate the span field
-        const span = document.createElement('span')
-        span.textContent = edit.value;
-        // replace the edit field with the span.
-        guest.insertBefore(span, edit);
-        guest.removeChild(edit);
-        // restore text on edit button
-        btn.textContent = 'edit';
-      }
+      // Execute the button based on the button's text
+      //  (using class might be better)
+      buttonActions[btn.textContent]();
     }
 } );
