@@ -12,10 +12,16 @@ filterCheckbox.type = 'checkbox';
 filterDiv.appendChild(filterLabel);
 filterDiv.appendChild(filterCheckbox);
 mainDiv.insertBefore(filterDiv, inviteList);
+const rsvpInviteList = 'rsvpInviteList';
 
+window.onload = function() {
+  createListFromLocalStorage();
+}
+// Listener for filter checkbox
 filterCheckbox.addEventListener('change', (event) => {
   for (let guest of inviteList.children) {
-    if (filterCheckbox.checked && guest.className === 'responded') {
+    if ( filterCheckbox.checked &&
+         guest.className !== 'responded') {
       guest.style.display = 'none';
     } else {
       guest.style.display = '';
@@ -23,7 +29,9 @@ filterCheckbox.addEventListener('change', (event) => {
   }
 } );
 
-function createGuest(name) {
+// Create a guest card
+//   Return a guest card element
+function createGuestElement(name, confirmed) {
   function createElement(type, property, value) {
     const element = document.createElement(type);
     element[property] = value;
@@ -37,10 +45,12 @@ function createGuest(name) {
   }
 
   const guest = document.createElement('li');
-  appendElementToGuest('span', 'textContent', input.value);
+  appendElementToGuest('span', 'textContent', name);
   // create checkbox enclosed in a label element
+  const ch = createElement('input', 'type', 'checkbox');
+  ch.checked = confirmed;
   appendElementToGuest('label', 'textContent', 'confirmed')
-    .appendChild(createElement('input', 'type', 'checkbox'));
+    .appendChild(ch);
   appendElementToGuest('button', 'textContent', 'edit');
   appendElementToGuest('button', 'textContent', 'remove');
   return guest;
@@ -49,13 +59,15 @@ function createGuest(name) {
 // Add a guest when form is submitted
 form.addEventListener('submit', (event) => {
   event.preventDefault();  // prevent default page refresh on submit
-  inviteList.appendChild(createGuest(input.value));
+  inviteList.appendChild(createGuestElement(input.value, false));
   input.value = '';
+  saveListToLocalStorage();
 } );
 
 // Change guest card styling based on Confirm checkbox
 inviteList.addEventListener('change', (event) => {
-  if ( event.target.tagName === 'INPUT' ) {
+  if ( event.target.tagName === 'INPUT' &&
+       event.target.type === 'checkbox') {
     const box = event.target;
     const guest = box.parentElement.parentElement;
     if ( box.checked ) {
@@ -63,6 +75,7 @@ inviteList.addEventListener('change', (event) => {
     } else {
       guest.className = '';
     }
+    saveListToLocalStorage();
   }
 } );
 
@@ -71,37 +84,69 @@ inviteList.addEventListener('click', (event) => {
     if ( event.target.tagName === 'BUTTON' ) {
       const btn = event.target;
       const guest = btn.parentElement;
-
       const buttonActions = {
         'remove': function() {
-          inviteList.removeChild(guest);
+          removeCard(guest);
+          saveListToLocalStorage();
         },
         'edit': function() {
-          const span = guest.querySelector('span');
-          // create the edit field
-          const edit = document.createElement('input');
-          edit.type = 'text';
-          edit.value = span.textContent;
-          // replace the text field with the edit field.
-          guest.insertBefore(edit, span);
-          guest.removeChild(span);
-          // replace text on edit button
-          btn.textContent = 'SAVE';
+          changeNameToEditMode(guest)
         },
         'SAVE': function() {
-          const edit = guest.querySelector('input[type="text"]');
-          // recreate the span field
-          const span = document.createElement('span')
-          span.textContent = edit.value;
-          // replace the edit field with the span.
-          guest.insertBefore(span, edit);
-          guest.removeChild(edit);
-          // restore text on edit button
-          btn.textContent = 'edit';
+          saveAndChangeNameToDisplayMode();
+          saveListToLocalStorage();
         }
       }
+
+      function removeCard() {
+        inviteList.removeChild(guest);
+      }
+
+      function changeNameToEditMode() {
+        const span = guest.querySelector('span');
+        // create the edit field
+        const edit = document.createElement('input');
+        edit.type = 'text';
+        edit.value = span.textContent;
+        // replace the text field with the edit field.
+        guest.insertBefore(edit, span);
+        guest.removeChild(span);
+        // replace text on edit button
+        btn.textContent = 'SAVE';
+      }
+
+      function saveAndChangeNameToDisplayMode() {
+        const edit = guest.querySelector('input[type="text"]');
+        // recreate the span field
+        const span = document.createElement('span')
+        span.textContent = edit.value;
+        // replace the edit field with the span.
+        guest.insertBefore(span, edit);
+        guest.removeChild(edit);
+        // restore text on edit button
+        btn.textContent = 'edit';
+
+      }
       // Execute the button based on the button's text
-      //  (using class might be better)
+      //  (using class might be better if buttons had clsss name)
       buttonActions[btn.textContent]();
     }
 } );
+
+function createListFromLocalStorage() {
+  for (let guest of JSON.parse(localStorage[rsvpInviteList])) {
+    inviteList.appendChild(createGuestElement(
+      guest['name'], guest['confirmed']));
+  }
+}
+
+function saveListToLocalStorage() {
+  let list = [];
+  for (guest of inviteList.children) {
+    list.push( {
+      name: guest.querySelector('span').textContent,
+      confirmed: guest.querySelector('input[type="checkbox"]').checked
+    } );
+  }
+  localStorage[rsvpInviteList] = JSON.stringify(list);
+}
