@@ -20,12 +20,9 @@ window.onload = function() {
 // Listener for filter checkbox
 filterCheckbox.addEventListener('change', (event) => {
   for (let guest of inviteList.children) {
-    if ( filterCheckbox.checked &&
-         guest.className !== 'responded') {
-      guest.style.display = 'none';
-    } else {
-      guest.style.display = '';
-    }
+    guest.style.display =
+      ( filterCheckbox.checked &&
+        guest.className !== 'responded') ? 'none' : '';
   }
 } );
 
@@ -45,17 +42,25 @@ function createGuestElement(name, confirmed) {
   }
 
   const guest = document.createElement('li');
+  guest.className = setClassName( confirmed );
+  // add name display element
   appendElementToGuest('span', 'textContent', name);
   // create checkbox enclosed in a label element
   const ch = createElement('input', 'type', 'checkbox');
   ch.checked = confirmed;
+  // create label element containing checkbox
   appendElementToGuest('label', 'textContent', 'confirmed')
     .appendChild(ch);
+  // add buttons
   appendElementToGuest('button', 'textContent', 'edit');
   appendElementToGuest('button', 'textContent', 'remove');
+
   return guest;
 }
 
+function setClassName( confirmed ) {
+  return confirmed ? 'responded' : '';
+}
 // Add a guest when form is submitted
 form.addEventListener('submit', (event) => {
   event.preventDefault();  // prevent default page refresh on submit
@@ -70,11 +75,7 @@ inviteList.addEventListener('change', (event) => {
        event.target.type === 'checkbox') {
     const box = event.target;
     const guest = box.parentElement.parentElement;
-    if ( box.checked ) {
-      guest.className = 'responded';
-    } else {
-      guest.className = '';
-    }
+    guest.className = setClassName( box.checked );
     saveListToLocalStorage();
   }
 } );
